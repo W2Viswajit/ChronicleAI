@@ -1,0 +1,30 @@
+[
+  {
+    "title": "Harbor City announces Riverline opening",
+    "publisher": "City Ledger · fictional",
+    "date": "2026-04-10",
+    "text": "On April 10, 2026, Harbor City announced that the Riverline metro would open on April 14, 2026. The new line connects Central Station to East Harbor. The route has eight stations. City officials said the service would run every ten minutes. The transport agency scheduled a safety inspection for April 12, 2026.",
+    "fictional": true
+  },
+  {
+    "title": "Riverline clears final safety inspection",
+    "publisher": "Harbor Report · fictional",
+    "date": "2026-04-12",
+    "text": "On April 12, 2026, the Riverline metro passed its final safety inspection. The route has eight stations. The new line connects Central Station to East Harbor. Inspectors reviewed signals and emergency exits. The transport agency confirmed that passenger service would begin on April 14, 2026.",
+    "fictional": true
+  },
+  {
+    "title": "Riverline welcomes its first passengers",
+    "publisher": "Metro Journal · fictional",
+    "date": "2026-04-15",
+    "text": "On April 14, 2026, the Riverline metro opened to passengers. The route has eight stations. The city transport agency reported 12,000 passenger journeys on opening day. Service runs every ten minutes. On April 15, 2026, the agency announced that it would publish a detailed ridership report later in the week.",
+    "fictional": true
+  },
+  {
+    "title": "Opening-day ridership figures differ",
+    "publisher": "East Harbor Post · fictional",
+    "date": "2026-04-15",
+    "text": "On April 14, 2026, the Riverline metro opened to passengers. The new line connects Central Station to East Harbor. A station operators association reported 9,500 passenger journeys on opening day. The association did not explain its counting method. Its figure differs from the 12,000 journeys reported by the city transport agency. The two totals have not been reconciled.",
+    "fictional": true
+  }
+]

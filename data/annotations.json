@@ -1,0 +1,15 @@
+{
+  "purpose": "Hand-authored fictional smoke examples, not a benchmark",
+  "duplicates": [
+    {"text": "The route has eight stations.", "sources": ["A1", "A2", "A3"]}
+  ],
+  "events": [
+    {"date": "2026-04-12", "event": "Riverline passed its final safety inspection.", "source": "A2"},
+    {"date": "2026-04-14", "event": "Riverline opened to passengers.", "sources": ["A3", "A4"]}
+  ],
+  "claim_pairs": [
+    {"a": "The city transport agency reported 12,000 passenger journeys on opening day.", "b": "A station operators association reported 9,500 passenger journeys on opening day.", "human_label": "different_attributed_totals_need_review", "note": "Both reports may correctly quote their sources. This does not establish logical contradiction or which count is true."},
+    {"a": "Riverline opened on April 14, 2026.", "b": "Riverline did not open on April 14, 2026.", "human_label": "contradiction"},
+    {"a": "By 10 AM, ten passengers had arrived.", "b": "By 2 PM, eighteen passengers had arrived.", "human_label": "compatible_time_update"}
+  ]
+}
