@@ -50,5 +50,8 @@ def detect(nlp,similarity,use_llm):
                 except Exception:item['context_flags'].append('Gemini review unavailable; retained as an unverified NLI flag.')
             output.append(item)
         return {'status':'completed','pairs':output,'tested_pairs':len(candidates),'model':config.NLI_MODEL,'threshold':config.NLI_THRESHOLD,'reason':'NLI scores are uncalibrated model scores, not truth probabilities.'}
+    except ModuleNotFoundError as e:
+        missing = e.name or 'unknown dependency'
+        return {'status':'unavailable','reason':f"NLI dependency missing: {missing}. Stop the server and run setup-models.ps1 from the project folder, then restart and analyze again.",'missing_module':missing,'pairs':[],'tested_pairs':0}
     except Exception as e:
         return {'status':'unavailable','reason':f'NLI could not run ({type(e).__name__}). Check model installation and download access.','pairs':[],'tested_pairs':0}
