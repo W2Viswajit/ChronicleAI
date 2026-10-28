@@ -11,8 +11,12 @@ from datetime import datetime, timezone
 import httpx
 from .config import RUNTIME
 from .schemas import Article
+from .news_search import GdeltSearch, GDELT_URL, fetch_gdelt
+from .news_fallback import NewsFallback
 CACHE = RUNTIME / 'article-cache'
 CACHE.mkdir(exist_ok=True)
+GDELT = GdeltSearch(RUNTIME / 'news-search.sqlite3')
+FALLBACK = NewsFallback(RUNTIME / 'news-fallback.sqlite3')
 
 def validate_url(url):
     p = urlsplit(url)
@@ -26,8 +30,12 @@ def validate_url(url):
     return url
 
 def fetch(url, params=None):
+    if url == GDELT_URL:
+        return fetch_gdelt(params)
     # Revalidate each redirect; body size and decompressed bytes are bounded.
-    with httpx.Client(timeout=httpx.Timeout(20, connect=8), follow_redirects=False, trust_env=False,
+    # Discovery can take longer than downloading an individual publisher page.
+    timeout = httpx.Timeout(20, connect=8)
+    with httpx.Client(timeout=timeout, follow_redirects=False, trust_env=False,
                       headers={'User-Agent':'ChronicleAI-academic-demo/1.0'}) as client:
         for _ in range(5):
             validate_url(url)
@@ -77,7 +85,8 @@ def topic_groups(topic):
     return groups
 
 def build_query(groups):
-    return ' '.join('(' + ' OR '.join(g) + ')' if len(g) > 1 else g[0] for g in groups)
+    # Equivalent topic wording/order shares one provider cache entry.
+    return ' '.join('(' + ' OR '.join(g) + ')' if len(g) > 1 else g[0] for g in sorted(groups))
 
 def matches_topic(text, groups):
     words = set(re.findall(r"[\w]+", text.lower()))
@@ -97,20 +106,24 @@ def search(topic, days, limit):
     if not groups:
         return {'articles':[], 'found':0, 'skipped':[], 'warnings':['Enter a specific subject, for example Bengaluru metro.']}
     query=build_query(groups)
-    try:
-        raw,_=fetch('https://api.gdeltproject.org/api/v2/doc/doc',params={'query':query+' sourcelang:english','mode':'artlist','format':'json','maxrecords':min(30,limit*3),'timespan':f'{days}d','sort':'hybridrel'})
-        decoded=json.loads(raw)
-        if not isinstance(decoded,dict) or not isinstance(decoded.get('articles',[]),list):
-            raise ValueError('Unexpected search response structure')
-        candidates=decoded.get('articles',[])
-    except httpx.TimeoutException:
-        warnings.append('GDELT search timed out. Try again later, widen the date range, or paste article URLs.')
-    except httpx.HTTPStatusError as e:
-        warnings.append(f'GDELT returned HTTP {e.response.status_code}. Try again later or paste article URLs.')
-    except (json.JSONDecodeError,ValueError):
-        warnings.append('GDELT returned an invalid or non-JSON response. No search results were assumed.')
-    except Exception:
-        warnings.append('Could not connect to GDELT. Check the network or use article URLs.')
+    fallback_enabled = os.getenv('NEWS_RSS_FALLBACK', '1') == '1'
+    cached_fallback = FALLBACK.cached_search(query, days) if fallback_enabled else None
+    provider = cached_fallback or GDELT.search(query, days, fetch)
+    primary_status = 'not_requested' if cached_fallback else provider.status
+    source = 'Bing News RSS' if cached_fallback else 'GDELT'
+    request_count = provider.requests
+    if provider.status != 'ok' and fallback_enabled:
+        fallback = FALLBACK.search(query, days)
+        request_count += fallback.requests
+        if fallback.status == 'ok':
+            provider = fallback
+            source = 'Bing News RSS'
+            warnings.append('GDELT is temporarily unavailable. Using Bing News RSS; publisher text is extracted and checked for relevance.')
+        else:
+            warnings.extend(fallback.warnings)
+            provider.retry_after = max(provider.retry_after, fallback.retry_after)
+    candidates = list(provider.articles)
+    warnings.extend(provider.warnings)
     if not candidates:
         for feed in filter(None,os.getenv('RSS_FEEDS','').split(',')):
             try:
@@ -143,6 +156,16 @@ def search(topic, days, limit):
             articles.append(a.model_dump())
         except Exception as e: skipped.append({'url':url,'reason':str(e)[:180]})
     if filtered:warnings.append(f'Excluded {filtered} off-topic articles using headline/lead keyword checks.')
-    if not articles:warnings.append('No relevant accessible articles found. Try a broader date range or paste direct article URLs. Unrelated stories are not used to fill the collection.')
+    if not articles:
+        if candidates:
+            warnings.append('Candidate links were found, but none produced a relevant readable article. '
+                            'See the skipped-link reasons or paste article text directly.')
+        elif provider.status == 'ok':
+            warnings.append('The search completed but returned no matching links. '
+                            'Try a broader date range or a shorter, specific topic.')
     # GDELT seendate is discovery time, deliberately not used as publication date.
-    return {'articles':articles,'found':len(candidates),'skipped':skipped,'warnings':warnings,'query_used':query,'relevance_method':'all topic concepts in headline/lead; at least one in headline'}
+    return {'articles':articles,'found':len(candidates),'skipped':skipped,'warnings':warnings,
+            'query_used':query,'relevance_method':'all topic concepts in headline/lead; at least one in headline',
+            'search_status':provider.status,'retry_after_seconds':provider.retry_after,
+            'search_cached':provider.cached,'provider_requests':request_count,
+            'search_provider':source,'primary_status':primary_status}

@@ -1,5 +1,6 @@
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
-if (!(Test-Path .venv\Scripts\python.exe)) { throw 'Run setup.ps1 first.' }
+$python = if (Test-Path .venv-local\Scripts\python.exe) { '.venv-local\Scripts\python.exe' } else { '.venv\Scripts\python.exe' }
+if (!(Test-Path $python)) { throw 'Run setup.ps1 first.' }
 Write-Host 'Open http://127.0.0.1:8000 once the server says startup complete. Stop with Ctrl+C.'
-& .\.venv\Scripts\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+& $python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000

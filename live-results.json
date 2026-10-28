@@ -1,0 +1,38 @@
+{
+  "live_test": true,
+  "results": [
+    {
+      "topic": "India cricket",
+      "at": "2026-10-27T20:35:40.933316+00:00",
+      "elapsed_seconds": 15.96,
+      "search_status": "provider_unavailable",
+      "retry_after_seconds": 30,
+      "provider_requests": 1,
+      "cached": false,
+      "candidate_links": 0,
+      "readable_articles": 0,
+      "articles": [],
+      "warnings": [
+        "GDELT is temporarily unavailable (HTTP 503). Automatic searches are paused for about 30 seconds. This does not mean your topic has no news. Use direct article URLs meanwhile."
+      ],
+      "skipped": []
+    },
+    {
+      "topic": "Bengaluru metro",
+      "at": "2026-10-27T20:36:27.373433+00:00",
+      "elapsed_seconds": 11.44,
+      "search_status": "provider_unavailable",
+      "retry_after_seconds": 60,
+      "provider_requests": 1,
+      "cached": false,
+      "candidate_links": 0,
+      "readable_articles": 0,
+      "articles": [],
+      "warnings": [
+        "GDELT is temporarily unavailable (HTTP 503). Automatic searches are paused for about 60 seconds. This does not mean your topic has no news. Use direct article URLs meanwhile."
+      ],
+      "skipped": []
+    }
+  ],
+  "passed": false
+}
